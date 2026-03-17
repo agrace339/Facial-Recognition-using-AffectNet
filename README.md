@@ -85,6 +85,18 @@ python scripts/3_PCA.py
 - Generates a scatter plot of the two most important components
 - Generates an animation of a reconstuction of one of the training images
 
+### **Step 4: SVM Analysis**
+
+```bash
+python scripts/SVM_4.py
+```
+
+### **Step 5: Ensemble method and random forest Analysis**
+
+```bash
+python scripts/5_Ensemble_Method.py
+```
+
 ## 6. Directory Structure
 
 After setup and running scripts, your folder structure should look like this:
