@@ -118,7 +118,9 @@ project-root/
 ├─ scripts/
 │  ├─ 1_data_import.py
 │  ├─ 2_data_cleaning.py
-│  └─ 3_PCA.py
+│  └─ PCA_3.py
+│  ├─ SVM_4.py
+│  └─ 5_Ensemble_Method.py
 │
 ├─ requirements.txt
 └─ README.md
