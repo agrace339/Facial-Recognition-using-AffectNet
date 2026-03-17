@@ -78,7 +78,7 @@ python scripts/2_data_cleaning.py
 ### **Step 3: Principal Component Analysis**
 
 ```bash
-python scripts/3_PCA.py
+python scripts/PCA_3.py
 ```
 
 - Defines PCA Class which applies PCA to a Training set to get a set of principal components which can be applied to images to project them onto a smaller feature space.
