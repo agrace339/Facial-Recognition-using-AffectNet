@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import numpy as np
 import pandas as pd
 import pickle
@@ -8,7 +7,7 @@ from PIL import Image
 
 from PCA_3 import PCA
 from SVM_4 import OneVsAllKernelSVM
-from sklearn.ensemble import RandomForestClassifier
+from randomforest import CustomRandomForest
 from tabulate import tabulate
 
 
@@ -69,16 +68,19 @@ def run_knn_experiment(knn_class, Z_train, y_train, Z_test):
     preds = classes[np.argmax(probs, axis=1)]
     return model, preds, probs
 
-# running random_forest
+# running random_forest from the randomforest.py
 def run_rf_experiment(Z_train, y_train, Z_test):
-    print("running random forest")
+    print("Running custom Random Forest from scratch...")
+    num_classes = len(np.unique(y_train))
 
-    model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
+    # Initialize our custom forest
+    model = CustomRandomForest(n_trees=20, max_depth=10)
     model.fit(Z_train, y_train)
-    preds = model.predict(Z_test)
-    probs = model.predict_proba(Z_test)
-    return model, preds, probs
 
+    preds = model.predict(Z_test)
+    probs = model.predict_proba(Z_test, n_classes=num_classes)
+
+    return model, preds, probs
 
 # esemble method
 
@@ -116,13 +118,13 @@ def calculate_all_metrics(y_true, y_pred, labels):
 
 
 
-
 def load_split(split_name):
     """Loads image data and labels from the cleaned directory."""
     df = pd.read_csv(ANNOTATION_FILE)
     df = df[df["split"] == split_name].copy()
     img_directory = IMAGES_DIR / split_name
 
+    # Initialize matrix: num_samples x (96*96 pixels)
     matrix_of_pixel = np.zeros((len(df), 96 * 96), dtype=np.float64)
     vector_of_categories = df["label"].astype(int).to_numpy()
     filenames = df["file_name"].tolist()
@@ -145,66 +147,8 @@ def subsample(features, labels, max_per_class, seed=42):
     return features[np.array(sorted(row_numbers_img))], labels[np.array(sorted(row_numbers_img))]
 
 
-
-# KNN FROM SCRATCH
-
-class KNearestNeighbors:
-    def __init__(self, num_of_neighbors=5):
-        self.num_of_neighbors = num_of_neighbors # number of neighbors
-        self.X_training = None # stores faces from training ser
-        self.y_training = None # stores the emotion (0,1,2..) for every face stored in X_training
-
-    def fit(self, pixels_training_set, num_code_emotion):
-        self.X_training = np.asarray(pixels_training_set, dtype=np.float32)
-        self.y_training = np.asarray(num_code_emotion)
-
-    def predict_probability(self, new_faces): # compares new faces against old faces
-        """Calculates confidence based on neighbor frequency."""
-        new_faces = np.asarray(new_faces, dtype=np.float32)
-        # Vectorized Euclidean Distance
-        dists = np.sqrt(np.sum(new_faces ** 2, axis=1, keepdims=True) +
-                        np.sum(self.X_training ** 2, axis=1) -
-                        2.0 * (new_faces @ self.X_training.T))
-        knn_indices = np.argsort(dists, axis=1)[:, :self.num_of_neighbors]
-        knn_labels = self.y_training[knn_indices]
-
-        classes = np.unique(self.y_training)
-        probs = []
-        for i in range(len(new_faces)):
-            counts = [np.sum(knn_labels[i] == c) for c in classes]
-            probs.append(np.array(counts) / self.num_of_neighbors)
-        return np.array(probs), classes
-
-
-# ENSEMBLE LAYER
-
-class FacialExpressionEnsemble:
-    """Combines SVM and KNN outputs using weighted voting."""
-
-    def __init__(self, svm_model, knn_model, svm_weight=0.6):
-        self.svm = svm_model
-        self.knn = knn_model
-        self.svm_weight = svm_weight
-        self.knn_weight = 1.0 - svm_weight
-
-    def predict(self, new_faces):
-        # SVM Confidence (Softmax of decision scores)
-        svm_scores = self.svm.decision_function(new_faces)
-        svm_probs = np.exp(svm_scores) / np.sum(np.exp(svm_scores), axis=1, keepdims=True)
-
-        # KNN Confidence
-        knn_probs, classes = self.knn.predict_probability(new_faces)
-
-        # Weighted Decision
-        final_probs = (self.svm_weight * svm_probs) + (self.knn_weight * knn_probs)
-        return classes[np.argmax(final_probs, axis=1)]
-
-
-# EVALUATION METRICS
-
 def calculate_metrics(y_true, predicted_y, labels):
-    """Calculates Precision, Recall, and F1 manually."""
-
+    """Manual calculation of Precision, Recall, and F1."""
     label_map = {label: i for i, label in enumerate(labels)}
     confusion_matrix = np.zeros((len(labels), len(labels)), dtype=int)
     for yt, y_predicted in zip(y_true, predicted_y):
@@ -216,73 +160,74 @@ def calculate_metrics(y_true, predicted_y, labels):
         false_positive = np.sum(confusion_matrix[:, i]) - true_positive
         false_negative = np.sum(confusion_matrix[i, :]) - true_positive
 
-
         precision = true_positive / (true_positive + false_positive) if (true_positive + false_positive) > 0 else 0
         recall = true_positive / (true_positive + false_negative) if (true_positive + false_negative) > 0 else 0
         f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
         results[label] = (precision, recall, f1_score)
 
-
-    macro_f1_score = np.mean([v[2] for v in results.values()]) # the average of all the averages of the f1 scotes
+    macro_f1_score = np.mean([v[2] for v in results.values()])
     return confusion_matrix, results, macro_f1_score
 
 
-# MAIN PIPELINE
-from PCA_3 import PCA
+
 
 def main():
-    # Load and Prepare Data
+    #  load data and PCA code
+    #  get Z_train, Z_test, y_train, y_test
+
     X_train_raw, y_train_raw = load_split("train")
     X_test_raw, y_test_raw = load_split("test")
-    X_training, y_training= subsample(X_train_raw, y_train_raw, 200)
+
+    X_training, y_training = subsample(X_train_raw, y_train_raw, 200)
     X_test, y_test = subsample(X_test_raw, y_test_raw, 100)
 
-    # FIXED PATH LOGIC
     if not PCA_CACHE_FILE.exists():
-        raise FileNotFoundError(f"Could not find the PCA file at {PCA_CACHE_FILE}. "
-                                f"Please run PCA_3.py first to generate it.")
+        raise FileNotFoundError(f"PCA cache not found at {PCA_CACHE_FILE}")
 
     with open(PCA_CACHE_FILE, "rb") as f:
         pca = pickle.load(f)
 
-
-    # Use the 'pca' object you just loaded to project the data
     Z_train = pca.apply_projection(X_training, n_components=150)
     Z_test = pca.apply_projection(X_test, n_components=150)
 
-
-
-    print("Projection data using loaded PCA model")
-    Z_train = pca.apply_projection(X_training, n_components=150)
-    Z_test = pca.apply_projection(X_test, n_components=150)
-
-    # 3. Standardization
+    # Standardization
     z_mean, z_std = Z_train.mean(axis=0), Z_train.std(axis=0)
     z_std[z_std == 0] = 1.0
     Z_train = (Z_train - z_mean) / z_std
     Z_test = (Z_test - z_mean) / z_std
 
-    # Initialize Classifiers
+    labels = np.unique(y_test)
+    all_results = {}
 
-    # Import your OneVsAllKernelSVM class here or from SVM_4.py
-    from SVM_4 import OneVsAllKernelSVM
-    svm = OneVsAllKernelSVM(kernel="rbf", C=10.0, gamma=0.01)
-    svm.fit(Z_train, y_training)
+    # run SVM AND KNN independently
+    svm_model, svm_preds = run_svm_experiment(Z_train, y_training, Z_test)
+    knn_model, knn_preds, knn_probs = run_knn_experiment(KNearestNeighbors, Z_train, y_training, Z_test)
+    rf_model, rf_preds, rf_probs = run_rf_experiment(Z_train, y_training, Z_test)
 
-    knn = KNearestNeighbors(num_of_neighbors=7)
-    knn.fit(Z_train, y_training)
+    # run Ensemble
+    ensemble_preds = run_ensemble_experiment(svm_model, knn_probs, rf_probs, y_test, labels, Z_test)
+    # Metrics
+    all_results['SVM'] = calculate_all_metrics(y_test, svm_preds, labels)
+    all_results['KNN'] = calculate_all_metrics(y_test, knn_preds, labels)
+    all_results['Random Forest'] = calculate_all_metrics(y_test, rf_preds, labels)
+    all_results['Ensemble'] = calculate_all_metrics(y_test, ensemble_preds, labels)
 
-    # Ensemble & Evaluate
-    ensemble = FacialExpressionEnsemble(svm, knn, svm_weight=0.7)
-    y_predicted = ensemble.predict(Z_test)
 
-    confusion_matrix, per_class, macro_f1_score = calculate_metrics(y_test, y_predicted, np.unique(y_test))
+    # show report in table format
+    headers_ = ["Model","Accuracy","F1","SMAPE"]
+    #  report
+    for model_name, metrics in all_results.items():
+        row = [
+            model_name,
+            f"{metrics['Accuracy']:.4f}",
+            f"{metrics['F1']:.4f}",
+            f"{metrics['SMAPE']:.2f}%"
 
-    print(f"Confusion Matrix:\n{confusion_matrix}")
-    print(f"\n")
-    print(f"Overall Macro F1-Score: {macro_f1_score:.4f}")
+        ]
+        table_data.append(row)
 
+
+    print(tabulate(table_data, headers=headers_, tablefmt="grid"))
 
 if __name__ == "__main__":
     main()
-
