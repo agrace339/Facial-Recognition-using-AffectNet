@@ -45,6 +45,7 @@ pip install -r requirements.txt
 - `Pillow`
 - `tqdm`
 - `kagglehub`
+- `tabulate`
 
 > All versions are specified in `requirements.txt` to ensure reproducibility.
 
