@@ -46,6 +46,9 @@ pip install -r requirements.txt
 - `tqdm`
 - `kagglehub`
 - `tabulate`
+- `cv2`
+- `matplotlib`
+
 
 > All versions are specified in `requirements.txt` to ensure reproducibility.
 
