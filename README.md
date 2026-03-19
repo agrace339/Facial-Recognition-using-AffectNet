@@ -101,6 +101,17 @@ python script/SVM_4.py
 python script/5_Ensemble_Method.py
 ```
 
+### **Step 6: Gabor Energy feature extraction + KNN from scratch**
+
+```bash
+python script/6_Gabor_KNN.py
+```
+
+- Builds a Gabor filter bank from scratch and extracts Gabor energy features.
+- Implements K-Nearest Neighbors from scratch with configurable distance metrics.
+- Tunes hyperparameters over multiple `k` values and distance metrics using validation data.
+- Retrains best config on train+val and reports final test metrics.
+
 ## 6. Directory Structure
 
 After setup and running scripts, your folder structure should look like this:
@@ -119,12 +130,13 @@ project-root/
 │     │  └─ test/
 │     └─ affectnet_annotations.csv
 │
-├─ scripts/
+├─ script/
 │  ├─ 1_data_import.py
 │  ├─ 2_data_cleaning.py
-│  └─ PCA_3.py
+│  ├─ PCA_3.py
 │  ├─ SVM_4.py
-│  └─ 5_Ensemble_Method.py
+│  ├─ 5_Ensemble_Method.py
+│  ├─ 6_Gabor_KNN.py
 │  └─ randomforest.py
 │
 ├─ requirements.txt
