@@ -57,7 +57,7 @@ All scripts are located in the `scripts/` folder. You need to run them in the fo
 ### **Step 1: Download and organize raw dataset**
 
 ```bash
-python scripts/1_data_import.py
+python script/1_data_import.py
 ```
 
 - Downloads the AffectNet dataset from Kaggle using `kagglehub`.
@@ -67,7 +67,7 @@ python scripts/1_data_import.py
 ### **Step 2: Clean and process images**
 
 ```bash
-python scripts/2_data_cleaning.py
+python script/2_data_cleaning.py
 ```
 
 - Removes corrupt, blurry, overexposed, or duplicate images.
@@ -78,7 +78,7 @@ python scripts/2_data_cleaning.py
 ### **Step 3: Principal Component Analysis**
 
 ```bash
-python scripts/PCA_3.py
+python script/PCA_3.py
 ```
 
 - Defines PCA Class which applies PCA to a Training set to get a set of principal components which can be applied to images to project them onto a smaller feature space.
@@ -88,13 +88,13 @@ python scripts/PCA_3.py
 ### **Step 4: SVM Analysis**
 
 ```bash
-python scripts/SVM_4.py
+python script/SVM_4.py
 ```
 
 ### **Step 5: Ensemble method and random forest Analysis**
 
 ```bash
-python scripts/5_Ensemble_Method.py
+python script/5_Ensemble_Method.py
 ```
 
 ## 6. Directory Structure
@@ -121,6 +121,7 @@ project-root/
 │  └─ PCA_3.py
 │  ├─ SVM_4.py
 │  └─ 5_Ensemble_Method.py
+│  └─ randomforest.py
 │
 ├─ requirements.txt
 └─ README.md
