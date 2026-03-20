@@ -7,7 +7,7 @@ from PIL import Image
 
 from PCA import PCA
 from SVM import OneVsAllKernelSVM
-from RandomForest import RandomForest
+from randomforest import RandomForest
 from tabulate import tabulate
 
 
