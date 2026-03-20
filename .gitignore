@@ -11,3 +11,5 @@ script/cache/
 
 # Output figures
 output_figs/
+script/__pycache__
+script/*.pyc

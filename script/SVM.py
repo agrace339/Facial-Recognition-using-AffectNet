@@ -4,32 +4,13 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 from tqdm import tqdm
+from PCA import PCA
 
 PROJECT_ROOT = Path(__file__).parent.parent
 CLEANED_DIR = PROJECT_ROOT / "data" / "cleaned"
 IMAGES_DIR = CLEANED_DIR / "images"
 ANNOTATION_FILE = CLEANED_DIR / "affectnet_annotations.csv"
 PCA_CACHE_FILE = PROJECT_ROOT / "script" / "cache" / "pca.pkl"
-
-
-class PCA:
-    def __init__(self, X_train: np.ndarray):
-        X_train = np.asarray(X_train, dtype=np.float32)
-        self.train_mean = np.mean(X_train, axis=0).astype(np.float32)
-        self.train_dev = np.std(X_train, axis=0).astype(np.float32)
-        self.train_dev[self.train_dev == 0] = 1.0
-
-        X = (X_train - self.train_mean) / self.train_dev
-        _, _, Vt = np.linalg.svd(X, full_matrices=False)
-        self.principal_components = Vt.T.astype(np.float32)
-
-    def apply_projection(self, X, n_components=2):
-        X = np.asarray(X, dtype=np.float32)
-        if X.ndim == 1:
-            X = X.reshape(1, -1)
-        X_std = (X - self.train_mean) / self.train_dev
-        return X_std @ self.principal_components[:, :n_components]
-
 
 class KernelFunctions:
     @staticmethod
@@ -263,12 +244,19 @@ def hyperparameter_search(X_train, y_train, X_val, y_val):
         # Linear
         {"kernel": "linear", "C": 10.0, "epochs": 1000},
         {"kernel": "linear", "C": 100.0, "epochs": 1000},
-        # RBF (focus here — consistently best)
+        # RBF
         {"kernel": "rbf", "C": 10.0, "gamma": 0.01, "epochs": 1000},
         {"kernel": "rbf", "C": 10.0, "gamma": 0.02, "epochs": 1000},
         {"kernel": "rbf", "C": 50.0, "gamma": 0.01, "epochs": 1000},
         {"kernel": "rbf", "C": 50.0, "gamma": 0.02, "epochs": 1000},
         {"kernel": "rbf", "C": 100.0, "gamma": 0.01, "epochs": 1000},
+        # Polynomial
+        {"kernel": "poly", "C": 10.0, "degree": 3, "coef0": 1.0, "epochs": 1000},
+        {"kernel": "poly", "C": 10.0, "degree": 4, "coef0": 1.0, "epochs": 1000},
+        {"kernel": "poly", "C": 50.0, "degree": 3, "coef0": 1.0, "epochs": 1000},
+        {"kernel": "poly", "C": 50.0, "degree": 4, "coef0": 1.0, "epochs": 1000},
+        {"kernel": "poly", "C": 100.0, "degree": 3, "coef0": 1.0, "epochs": 1000},
+        {"kernel": "poly", "C": 100.0, "degree": 4, "coef0": 1.0, "epochs": 1000},
     ]
 
     best_model = None
@@ -298,7 +286,7 @@ def hyperparameter_search(X_train, y_train, X_val, y_val):
 
 
 def main():
-    print("=== SVM v4 (Nesterov accelerated + kernel caching) ===")
+    print("=== SVM 4 (Nesterov accelerated + kernel caching) ===")
     print("Loading data...")
 
     X_train, y_train = load_split("train")

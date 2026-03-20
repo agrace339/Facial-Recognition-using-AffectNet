@@ -79,38 +79,14 @@ python script/2_data_cleaning.py
 - Saves cleaned images to `data/cleaned/images`.
 - Generates a CSV annotation file `data/cleaned/affectnet_annotations.csv`.
 
-### **Step 3: Principal Component Analysis**
+### **Step 3: Run Models**
 
 ```bash
-python script/PCA_3.py
+python script/3_run_models.py
 ```
 
-- Defines PCA Class which applies PCA to a Training set to get a set of principal components which can be applied to images to project them onto a smaller feature space.
-- Generates a scatter plot of the two most important components
-- Generates an animation of a reconstuction of one of the training images
+- Trains, runs and prints results for the SVM, KNN, and Random Forest Classifiers
 
-### **Step 4: SVM Analysis**
-
-```bash
-python script/SVM_4.py
-```
-
-### **Step 5: Ensemble method and random forest Analysis**
-
-```bash
-python script/5_Ensemble_Method.py
-```
-
-### **Step 6: Gabor Energy feature extraction + KNN from scratch**
-
-```bash
-python script/6_Gabor_KNN.py
-```
-
-- Builds a Gabor filter bank from scratch and extracts Gabor energy features.
-- Implements K-Nearest Neighbors from scratch with configurable distance metrics.
-- Tunes hyperparameters over multiple `k` values and distance metrics using validation data.
-- Retrains best config on train+val and reports final test metrics.
 
 ## 6. Directory Structure
 
@@ -133,11 +109,10 @@ project-root/
 ├─ script/
 │  ├─ 1_data_import.py
 │  ├─ 2_data_cleaning.py
-│  ├─ PCA_3.py
-│  ├─ SVM_4.py
-│  ├─ 5_Ensemble_Method.py
-│  ├─ 6_Gabor_KNN.py
-│  └─ randomforest.py
+│  ├─ 3_run_models.py
+│  ├─ PCA.py
+│  ├─ RandomForest.py
+│  └─ SVM.py
 │
 ├─ requirements.txt
 └─ README.md
