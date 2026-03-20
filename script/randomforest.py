@@ -79,7 +79,7 @@ class DecisionTree:
         return np.array([self._traverse_tree(x, self.tree) for x in X])
 
 
-class CustomRandomForest:
+class RandomForest:
     def __init__(self, n_trees=10, max_depth=10, min_samples_split=2):
         self.n_trees = n_trees
         self.max_depth = max_depth
