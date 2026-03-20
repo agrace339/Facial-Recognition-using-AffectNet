@@ -5,9 +5,9 @@ from pathlib import Path
 from tqdm import tqdm
 from PIL import Image
 
-from script.PCA import PCA
-from script.SVM import OneVsAllKernelSVM
-from script.RandomForest import RandomForest
+from PCA import PCA
+from SVM import OneVsAllKernelSVM
+from RandomForest import RandomForest
 from tabulate import tabulate
 
 

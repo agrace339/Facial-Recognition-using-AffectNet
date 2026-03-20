@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 from tqdm import tqdm
-from script.PCA import PCA
+from PCA import PCA
 
 PROJECT_ROOT = Path(__file__).parent.parent
 CLEANED_DIR = PROJECT_ROOT / "data" / "cleaned"
