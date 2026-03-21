@@ -112,6 +112,7 @@ project-root/
 │  ├─ 3_run_models.py
 │  ├─ PCA.py
 │  ├─ RandomForest.py
+│  ├─ KNN.py
 │  └─ SVM.py
 │
 ├─ requirements.txt

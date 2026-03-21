@@ -8,6 +8,7 @@ from PIL import Image
 from PCA import PCA
 from SVM import OneVsAllKernelSVM
 from randomforest import RandomForest
+from KNN import KNearestNeighbors
 from tabulate import tabulate
 
 
@@ -35,42 +36,11 @@ class_labels = {
 	7: "Surprise",
 }
 
-
-class KNearestNeighbors:
-	def __init__(self, num_of_neighbors=5):
-		self.num_of_neighbors = num_of_neighbors
-		self.X_training = None
-		self.y_training = None
-
-	def fit(self, pixels_training_set, num_code_emotion):
-		self.X_training = np.asarray(pixels_training_set, dtype=np.float32)
-		self.y_training = np.asarray(num_code_emotion)
-
-	def predict_probability(self, new_faces):
-		"""Calculates confidence based on neighbor frequency."""
-		new_faces = np.asarray(new_faces, dtype=np.float32)
-		# Vectorized Euclidean Distance
-		dists = np.sqrt(
-			np.sum(new_faces**2, axis=1, keepdims=True)
-			+ np.sum(self.X_training**2, axis=1)
-			- 2.0 * (new_faces @ self.X_training.T)
-		)
-		knn_indices = np.argsort(dists, axis=1)[:, : self.num_of_neighbors]
-		knn_labels = self.y_training[knn_indices]
-
-		classes = np.unique(self.y_training)
-		probs = []
-		for i in range(len(new_faces)):
-			counts = [np.sum(knn_labels[i] == c) for c in classes]
-			probs.append(np.array(counts) / self.num_of_neighbors)
-		return np.array(probs), classes
-
-
 #  run the svm to predict the model
 
 
 def run_svm_experiment(Z_train, y_train, Z_test):
-	print("svm, predict the model")
+	print("Running SVM experiment...")
 	model = OneVsAllKernelSVM(kernel="rbf", C=10.0, gamma=0.01)
 	model.fit(Z_train, y_train)
 	preds = model.predict(Z_test)
@@ -84,7 +54,7 @@ def run_knn_experiment(knn_class, Z_train, y_train, Z_test, y_test):
 	print(f"Doing hyperparameter tuning for KNN testing ks from {min(ks)} to {max(ks)}...")
 	for k in ks:
 		# print(f"Testing KNN with k={k}...")
-		model = knn_class(num_of_neighbors=k)
+		model = KNearestNeighbors(num_of_neighbors=k)
 		model.fit(Z_train, y_train)
 		probs, classes = model.predict_probability(Z_test)
 		preds = classes[np.argmax(probs, axis=1)]
@@ -143,9 +113,7 @@ def run_rf_experiment(Z_train, y_train, Z_test,y_test,params=None):
 
 
 
-# esemble method
-
-
+# weighted voting method
 def run_ensemble_experiment(
 	svm_model,
 	knn_probs,
@@ -155,7 +123,7 @@ def run_ensemble_experiment(
 	Z_test,
 	weights=[0.4, 0.2, 0.4],
 ):
-	print("Running Weighted Ensemble...")
+	print("Running Weighted Voted Model...")
 	# Now Z_test is available here!
 	svm_scores = svm_model.decision_function(Z_test)
 	svm_probs = np.exp(svm_scores) / np.sum(np.exp(svm_scores), axis=1, keepdims=True)
@@ -252,35 +220,17 @@ def load_split(split_name):
 	return matrix_of_pixel, vector_of_categories
 
 
-def subsample(features, labels, max_per_class, seed=42):
-	"""Ensures balanced classes for training."""
-	random_number_generator = np.random.default_rng(seed)
-	row_numbers_img = []
-	for category in np.unique(labels):
-		index = np.where(labels == category)[0]
-		if len(index) > max_per_class:
-			index = random_number_generator.choice(index, max_per_class, replace=False)
-		row_numbers_img.extend(index.tolist())
-	return (
-		features[np.array(sorted(row_numbers_img))],
-		labels[np.array(sorted(row_numbers_img))],
-	)
-
-
 def main():
 	#  load data and PCA code
 	#  get Z_train, Z_test, y_train, y_test
 
-	X_train_raw, y_train_raw = load_split("train")
-	X_test_raw, y_test_raw = load_split("test")
-
-	X_training, y_training = subsample(X_train_raw, y_train_raw, 200)
-	X_test, y_test = subsample(X_test_raw, y_test_raw, 100)
+	X_training, y_training = load_split("train")
+	X_test, y_test = load_split("test")
 
 	pca_pickle_file = CACHE_DIR/"pca.pkl"
 	if not pca_pickle_file.exists():
 		print("PCA model not found in cache. Computing PCA...")
-		pca = PCA(X_train_raw)
+		pca = PCA(X_training)
 		with open(pca_pickle_file,"wb") as f:
 			pickle.dump(pca, f)
 		print(f"PCA computed and saved to {pca_pickle_file}")	
